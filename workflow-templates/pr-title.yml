@@ -1,0 +1,37 @@
+name: PR 제목 검사
+
+on:
+  pull_request_target:
+    types: [opened, reopened, edited]
+
+jobs:
+  title:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    # 제목이 [초안]으로 시작하면 검사하지 않는다(CONTRIBUTING.md 4.3).
+    if: ${{ !startsWith(github.event.pull_request.title, '[초안]') }}
+    steps:
+      - uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            perf
+            refactor
+            test
+            docs
+            build
+            ci
+            chore
+            style
+            revert
+          requireScope: false
+          # 설명에 한글이 들어 있고 마침표로 끝나지 않아야 한다.
+          subjectPattern: ^(?=.*[가-힣]).*[^.]$
+          subjectPatternError: |
+            PR 제목의 설명 부분이 규칙에 맞지 않습니다: {subject}
+            설명은 한국어로 쓰고, 끝에 마침표를 찍지 않습니다.
+            예) fix(player): 29.97fps 영상에서 프레임 이동이 한 칸 밀리는 문제 수정

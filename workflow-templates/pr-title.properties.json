@@ -1,0 +1,6 @@
+{
+  "name": "PR 제목 검사",
+  "description": "PR 제목이 '타입(범위): 한국어 설명' 형식인지 확인합니다(CONTRIBUTING.md 1절).",
+  "iconName": "octicon git-pull-request",
+  "categories": ["Automation"]
+}

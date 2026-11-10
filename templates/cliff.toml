@@ -1,0 +1,49 @@
+# 릴리스 노트 설정(git-cliff). CONTRIBUTING.md 7절.
+# 스쿼시 머지로 main의 커밋 제목이 PR 제목과 같으므로, 제목의 타입으로 묶어 릴리스 노트를 만든다.
+# 실행: uvx git-cliff --latest   (마지막 태그 이후)
+#       uvx git-cliff --unreleased --tag v1.2.0   (다음 릴리스 초안)
+
+[changelog]
+header = ""
+body = """
+{% if version %}\
+## {{ version }} ({{ timestamp | date(format="%Y-%m-%d") }})
+{% else %}\
+## 다음 릴리스
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | striptags | trim }}
+{% for commit in commits %}
+- {% if commit.scope %}**{{ commit.scope }}**: {% endif %}{{ commit.message | split(pat="\n") | first | trim }}\
+{% if commit.breaking %} (호환 깨짐){% endif %}\
+{% endfor %}
+{% endfor %}
+{% set breaking = commits | filter(attribute="breaking", value=true) %}\
+{% if breaking | length > 0 %}
+### 옮기는 방법
+{% for commit in breaking %}
+- {{ commit.breaking_description }}\
+{% for footer in commit.footers %}{% if footer.token == "전" or footer.token == "후" %}
+  - {{ footer.token }}: `{{ footer.value }}`\
+{% endif %}{% endfor %}
+{% endfor %}\
+{% endif %}
+"""
+trim = true
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+split_commits = false
+protect_breaking_commits = true
+filter_commits = false
+sort_commits = "oldest"
+# 그룹 이름 앞의 숫자 주석은 릴리스 노트에서 그룹 순서를 정한다(striptags로 지워진다).
+commit_parsers = [
+  { message = "^feat", group = "<!-- 0 -->새 기능" },
+  { message = "^fix", group = "<!-- 1 -->버그 수정" },
+  { message = "^perf", group = "<!-- 2 -->성능 개선" },
+  { message = "^revert", group = "<!-- 3 -->되돌림" },
+  { message = "^refactor", group = "<!-- 4 -->구조 개선" },
+  { message = "^(docs|test|build|ci|chore|style)", skip = true },
+]
